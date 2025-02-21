@@ -24,8 +24,11 @@ export const wordsSlice = createSlice({
     addWord: (state, action: PayloadAction<string>) => {
       state.words.push(action.payload);
     },
+    setWords: (state, action: PayloadAction<string[]>) => {
+      state.words = action.payload;
+    },
   },
 });
 
-export const { addWord } = wordsSlice.actions;
+export const { addWord, setWords } = wordsSlice.actions;
 export default wordsSlice.reducer; 

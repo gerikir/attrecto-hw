@@ -1,43 +1,51 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { addWord } from "@/features/wordsSlice";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import GameComponent from "./GameComponent";
 
 export default function GameContainer() {
-    const dispatch = useDispatch();
     const words = useSelector((state: RootState) => state.words.words);
-    const [newWord, setNewWord] = useState("");
     const router = useRouter();
-    const [word, setWord] = useState("EXAMPLE");
+    const [word, setWord] = useState("");
     const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
     const [remainingAttempts, setRemainingAttempts] = useState(6);
+    const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing");
+
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
     useEffect(() => {
-        const storedWords = localStorage.getItem("words");
-        if (storedWords) {
-            const parsedWords = JSON.parse(storedWords);
-            parsedWords.forEach((word: string) => {
-                if (!words.includes(word)) {
-                    dispatch(addWord(word));
-                }
-            });
-        }
-    }, [dispatch, words]);
+        const storedState = localStorage.getItem("gameState");
+        const selectedWord = localStorage.getItem("selectedWord");
 
-    const handleAddWord = () => {
-        if (newWord.trim() && !words.includes(newWord.trim())) {
-            dispatch(addWord(newWord.trim()));
-            const updatedWords = [...words, newWord.trim()];
-            localStorage.setItem("words", JSON.stringify(updatedWords));
-            setNewWord("");
+        if (storedState) {
+            const { word, guessedLetters, remainingAttempts, gameStatus } = JSON.parse(storedState);
+            setWord(word);
+            setGuessedLetters(guessedLetters);
+            setRemainingAttempts(remainingAttempts);
+            setGameStatus(gameStatus);
+        } else if (selectedWord) {
+            setWord(selectedWord);
+        } else {
+            router.push("/");
         }
-    };
+    }, [words, router]);
 
-    const handleBack = () => {
-        router.push("/");
-    };
+    useEffect(() => {
+        if (word && word.split("").every((letter) => guessedLetters.includes(letter))) {
+            setGameStatus("won");
+        }
+    }, [guessedLetters, word]);
+
+    useEffect(() => {
+        if (remainingAttempts <= 0) {
+            setGameStatus("lost");
+        }
+    }, [remainingAttempts]);
+
+    useEffect(() => {
+        localStorage.setItem("gameState", JSON.stringify({ word, guessedLetters, remainingAttempts, gameStatus }));
+    }, [word, guessedLetters, remainingAttempts, gameStatus]);
 
     const handleLetterClick = (letter: string) => {
         if (!word.includes(letter)) {
@@ -47,14 +55,19 @@ export default function GameContainer() {
     };
 
     const handleEndGame = () => {
-        // Logic to end the game
+        router.push("/");
     };
 
-    const handleStartNewGame = () => {
-        // Logic to start a new game
-        setWord("NEWWORD"); // Replace with logic to select a new word
-        setGuessedLetters([]);
-        setRemainingAttempts(6);
+    const startNewGame = () => {
+        const selectedWord = localStorage.getItem("selectedWord");
+        if (selectedWord) {
+            setWord(selectedWord);
+            setGuessedLetters([]);
+            setRemainingAttempts(6);
+            setGameStatus("playing");
+        } else {
+            router.push("/");
+        }
     };
 
     return (
@@ -64,7 +77,9 @@ export default function GameContainer() {
             remainingAttempts={remainingAttempts}
             onLetterClick={handleLetterClick}
             onEndGame={handleEndGame}
-            onStartNewGame={handleStartNewGame}
+            onStartNewGame={startNewGame}
+            gameStatus={gameStatus}
+            alphabet={alphabet}
         />
     );
 }
