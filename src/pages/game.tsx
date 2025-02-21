@@ -1,8 +1,7 @@
-export default function Game() {
+import Game from "@/components/Game";
+
+export default function GamePage() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <h1 className="text-2xl font-bold">Játék</h1>
-      <p>Itt fog megjelenni a játék felülete.</p>
-    </div>
+    <Game />
   );
 }
