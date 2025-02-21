@@ -21,9 +21,14 @@ export default function StartComponent() {
     const handlePlayClick = () => {
         const selectedWords = categories[difficulty];
 
+        if (selectedWords.length === 0) {
+            alert("No words available for the selected difficulty.");
+            return;
+        }
+
         const randomWord = selectedWords[Math.floor(Math.random() * selectedWords.length)];
-        console.log("randomWord, ", randomWord);
         localStorage.setItem("selectedWord", randomWord.toUpperCase());
+        localStorage.setItem("selectedCategory", difficulty);
         router.push("/game");
     };
 
